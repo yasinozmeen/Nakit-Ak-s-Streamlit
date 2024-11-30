@@ -5,7 +5,7 @@ import json
 import os
 
 # Sayfa Yapısı ve Ayarlar
-st.set_page_config(page_title="Geliştirilmiş Arayüz Tasarımı", layout="wide")
+st.set_page_config(page_title="Nakit Akışı", layout="wide")
 
 # Profil Listesi
 st.sidebar.header("Profiller")
@@ -91,7 +91,7 @@ with st.container():
 # Form Alanı
 st.header("Bilgi Girişi")
 with st.form("input_form"):
-    explanation = st.text_area("Açıklama Giriniz", key='explanation_input')
+    explanation = st.text_area("Açıklama Giriniz", key='explanation_input', placeholder="Açıklama")
     
     col1, col2 = st.columns(2)
     with col1:
