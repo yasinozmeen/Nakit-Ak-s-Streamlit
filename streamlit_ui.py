@@ -44,17 +44,30 @@ for profile in profil_verileri:
     # 'Kategori' anahtarının varlığını kontrol edin
     if 'Kategori' not in profil_verileri[profile]:
         profil_verileri[profile]['Kategori'] = []
+    # **'Currency' anahtarının varlığını kontrol edin**
+    if 'Currency' not in profil_verileri[profile]:
+        profil_verileri[profile]['Currency'] = '₺'  # Varsayılan para birimi
 
 # Seçili profil için verileri kontrol edin
 if selected_profile not in profil_verileri:
     profil_verileri[selected_profile] = {
         "NeredenNereye": [],
-        "Kategori": []
+        "Kategori": [],
+        "Currency": '₺'
     }
 
 # JSON dosyasını güncelle
 with open(json_file_name, 'w') as f:
     json.dump(profil_verileri, f, indent=4)
+
+# **Para birimi sembolünü al**
+currency_symbol = profil_verileri[selected_profile].get('Currency', '₺')
+
+# **Form değerlerini sıfırlama kontrolü**
+if 'form_submitted' in st.session_state and st.session_state.form_submitted:
+    st.session_state.explanation_input = ''
+    st.session_state.amount_input = ''
+    st.session_state.form_submitted = False
 
 # Takvim Kısmı
 st.header("Takvim")
@@ -78,7 +91,7 @@ with st.container():
 # Form Alanı
 st.header("Bilgi Girişi")
 with st.form("input_form"):
-    explanation = st.text_area("Açıklama Giriniz", key="'explanation_input'")
+    explanation = st.text_area("Açıklama Giriniz", key='explanation_input')
     
     col1, col2 = st.columns(2)
     with col1:
@@ -88,7 +101,8 @@ with st.form("input_form"):
     
     col3, col4 = st.columns(2)
     with col3:
-        amount = st.text_input("Tutar", key='amount_input')
+        # **Para birimi sembolünü "Tutar" alanının etiketine ekleyin**
+        amount = st.text_input(f"Tutar ({currency_symbol})", key='amount_input')
     with col4:
         category = st.selectbox("Kategori", options=profil_verileri[selected_profile]['Kategori'])
     
@@ -116,11 +130,22 @@ with st.expander("Yeni Değer Ekleme"):
             st.success(f"'{new_category}' başarıyla eklendi.")
             st.rerun()
 
+    # **Yeni Para Birimi Seçimi**
+    currency_options = ['₺', '$', '€', '£', '¥']
+    currency_index = currency_options.index(profil_verileri[selected_profile]['Currency']) if profil_verileri[selected_profile]['Currency'] in currency_options else 0
+    new_currency = st.selectbox("Profil için para birimi seçin", options=currency_options, index=currency_index, key='currency_select')
+    if st.button("Para Birimini Güncelle", key='update_currency_button'):
+        profil_verileri[selected_profile]['Currency'] = new_currency
+        # JSON dosyasını güncelle
+        with open(json_file_name, 'w') as f:
+            json.dump(profil_verileri, f, indent=4)
+        st.success(f"Para birimi '{new_currency}' olarak güncellendi.")
+        st.rerun()
+
 # Kaydetme Butonu Tıklandığında
 if submit_button:
     st.success("Veriler başarıyla kaydedildi.")
     data = {
-        'Profil': [selected_profile],
         'Tarih': [st.session_state.selected_date],
         'Açıklama': [st.session_state['explanation_input']],
         'Nereden': [from_location],
